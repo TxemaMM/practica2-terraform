@@ -1,0 +1,14 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
+# Secretos: van en el zip, nunca en git
+secrets.auto.tfvars
+
+# Python / editor
+__pycache__/
+*.pyc
+.vscode/
