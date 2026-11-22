@@ -37,3 +37,26 @@ variable "lb_algorithm" {
   type    = string
   default = "round_robin"
 }
+
+variable "minio_bucket" {
+  type    = string
+  default = "game-images"
+}
+
+variable "minio_root_user" {
+  type = string
+}
+
+variable "minio_reader_user" {
+  type = string
+}
+
+variable "minio_root_password" {
+  type      = string
+  sensitive = true
+}
+
+variable "minio_reader_password" {
+  type      = string
+  sensitive = true
+}

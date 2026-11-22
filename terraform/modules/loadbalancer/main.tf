@@ -4,7 +4,7 @@ resource "local_file" "nginx_conf" {
   content = templatefile("${path.module}/templates/nginx.conf.tftpl", {
     backends  = var.backends
     algorithm = var.algorithm
-    
+
   })
 }
 
@@ -45,7 +45,7 @@ resource "docker_container" "lb" {
   }
 
   healthcheck {
-    test = ["CMD", "wget", "-qO-", "http://127.0.0.1/lb-health"]
+    test     = ["CMD", "wget", "-qO-", "http://127.0.0.1/lb-health"]
     interval = "10s"
     timeout  = "3s"
     retries  = 3

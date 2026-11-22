@@ -27,6 +27,19 @@ module "loadbalancer" {
   depends_on = [module.web]
 }
 
+module "storage" {
+  source = "../../modules/storage"
+
+  name            = "${local.prefix}-minio"
+  network_name    = docker_network.backend.name
+  bucket          = var.minio_bucket
+  root_user       = var.minio_root_user
+  root_password   = var.minio_root_password
+  reader_user     = var.minio_reader_user
+  reader_password = var.minio_reader_password
+  images_dir      = "${path.root}/../../../assets/images"
+}
+
 module "database" {
   source = "../../modules/database"
 
@@ -54,8 +67,16 @@ module "web" {
   db_user     = var.postgres_user
   db_password = var.postgres_password
 
-  # Dev no tiene caché: la app arranca con CACHE_ENABLED=false
-  cache_enabled = false
+  minio_endpoint   = module.storage.endpoint
+  minio_bucket     = var.minio_bucket
+  minio_access_key = var.minio_reader_user
+  minio_secret_key = var.minio_reader_password
 
-  depends_on = [module.database]
+  cache_enabled = false
+  # Servir imágenes es trabajo de espera (I/O): más hilos por instancia
+  gunicorn_threads = 8
+
+  depends_on = [module.database, module.storage]
+  # Dev no tiene caché: la app arranca con CACHE_ENABLED=false
+  
 }

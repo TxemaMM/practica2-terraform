@@ -1,6 +1,12 @@
-import os, socket 
+import socket
+
+import os
 from contextlib import contextmanager
 from functools import wraps
+
+import urllib3
+from minio import Minio
+from minio.error import S3Error
 
 import json
 import redis
@@ -8,7 +14,7 @@ import time
 import psycopg2
 import psycopg2.errors
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
-                   session, url_for)
+                   session, url_for, Response, abort)
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
@@ -26,6 +32,62 @@ def inject_instance():
 def add_instance_header(response):
     # Cabecera HTTP útil para comprobar el reparto con curl
     response.headers["X-Served-By"] = INSTANCE_NAME
+    return response
+
+
+# --- Almacenamiento de imágenes (MinIO) ---
+MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT", "")
+MINIO_BUCKET = os.environ.get("MINIO_BUCKET", "game-images")
+
+minio_client = None
+if MINIO_ENDPOINT:
+    minio_client = Minio(
+        MINIO_ENDPOINT,
+        access_key=os.environ["MINIO_ACCESS_KEY"],
+        secret_key=os.environ["MINIO_SECRET_KEY"],
+        secure=False,  # red interna aislada: no hace falta TLS
+        region="us-east-1",
+        http_client=urllib3.PoolManager(     # Timeouts cortos: si MinIO cae, la web no se queda colgada
+            timeout=urllib3.Timeout(connect=2, read=5),
+            retries=urllib3.Retry(total=1, backoff_factor=0.1),
+        ),
+    )
+
+
+def fetch_image(object_name):
+    response = minio_client.get_object(MINIO_BUCKET, object_name)
+    try:
+        return response.read()
+    finally:
+        response.close()
+        response.release_conn()
+
+
+@app.route("/images/<int:game_id>")
+def game_image(game_id):
+    if minio_client is None:
+        abort(404)
+
+    data = None
+    # Primero la imagen del juego; si no existe, la imagen por defecto
+    for name in (f"game-{game_id}.jpg", "default.jpg"):
+        try:
+            data = fetch_image(name)
+            break
+        except S3Error as e:
+            if e.code == "NoSuchKey":
+                continue
+            app.logger.error("MinIO error al pedir %s: %s", name, e)
+            abort(502)
+        except Exception as e:
+            app.logger.error("MinIO no disponible: %s", e)
+            abort(503)  # MinIO no responde
+
+    if data is None:
+        abort(404)
+
+    response = Response(data, mimetype="image/jpeg")
+    response.headers["Cache-Control"] = "public, max-age=3600"
     return response
 
     

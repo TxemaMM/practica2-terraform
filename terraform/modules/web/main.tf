@@ -37,6 +37,10 @@ resource "docker_container" "web" {
     "GUNICORN_THREADS=${var.gunicorn_threads}",
     "INSTANCE_NAME=${var.name}-${count.index + 1}",
     "APP_ENV=${var.environment}",
+    "MINIO_ENDPOINT=${var.minio_endpoint}",
+    "MINIO_BUCKET=${var.minio_bucket}",
+    "MINIO_ACCESS_KEY=${var.minio_access_key}",
+    "MINIO_SECRET_KEY=${var.minio_secret_key}",
   ]
 
   networks_advanced {

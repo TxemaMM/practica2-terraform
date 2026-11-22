@@ -1,7 +1,9 @@
-project       = "ranking"
-environment   = "dev"
-postgres_db   = "ranking"
-postgres_user = "ranking_user"
-web_replicas  = 2
-lb_port       = 8080
-lb_algorithm  = "round_robin"
+project           = "ranking"
+environment       = "dev"
+postgres_db       = "ranking"
+postgres_user     = "ranking_user"
+web_replicas      = 2
+lb_port           = 8080
+lb_algorithm      = "round_robin"
+minio_root_user   = "ranking_admin"
+minio_reader_user = "ranking_reader"

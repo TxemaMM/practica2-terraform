@@ -76,3 +76,23 @@ variable "gunicorn_threads" {
   default = 4
 }
 
+variable "minio_endpoint" {
+  type    = string
+  default = ""
+}
+
+variable "minio_bucket" {
+  type    = string
+  default = "game-images"
+}
+
+variable "minio_access_key" {
+  type    = string
+  default = ""
+}
+
+variable "minio_secret_key" {
+  type      = string
+  default   = ""
+  sensitive = true
+}

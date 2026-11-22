@@ -45,8 +45,14 @@
   <ul class="games">
     {% for id, name, votes in games %}
       <li>
+        <img class="game-img"
+              src="{{ url_for('game_image', game_id=id) }}"
+              alt="Portada de {{ name }}"
+              width="48" height="48" loading="lazy"
+              onerror="this.style.display='none'">
         <span class="name">{{ name }}</span>
         <span class="votes">{{ votes }} voto{{ '' if votes == 1 else 's' }}</span>
+        
         {% if session.get('user_id') %}
           {% if id in voted %}
             <span class="voted">✓ votado</span>
