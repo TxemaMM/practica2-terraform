@@ -16,9 +16,12 @@ resource "docker_image" "web" {
 }
 
 resource "docker_container" "web" {
-  name    = var.name
-  image   = docker_image.web.image_id
-  restart = "unless-stopped"
+  count = var.replicas
+
+  name     = "${var.name}-${count.index + 1}"
+  hostname = "${var.name}-${count.index + 1}"
+  image    = docker_image.web.image_id
+  restart  = "unless-stopped"
 
   env = [
     "SECRET_KEY=${var.secret_key}",
@@ -32,13 +35,14 @@ resource "docker_container" "web" {
     "REDIS_PASSWORD=${var.redis_password}",
     "GUNICORN_WORKERS=${var.gunicorn_workers}",
     "GUNICORN_THREADS=${var.gunicorn_threads}",
+    "INSTANCE_NAME=${var.name}-${count.index + 1}",
+    "APP_ENV=${var.environment}",
   ]
 
   networks_advanced {
     name = var.network_name
   }
 
-  # La imagen slim no trae curl: usamos Python para llamar a /status
   healthcheck {
     test     = ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/status', timeout=3)"]
     interval = "10s"

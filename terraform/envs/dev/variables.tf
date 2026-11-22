@@ -24,3 +24,16 @@ variable "secret_key" {
   type      = string
   sensitive = true
 }
+
+variable "web_replicas" {
+  type = number
+}
+
+variable "lb_port" {
+  type = number
+}
+
+variable "lb_algorithm" {
+  type    = string
+  default = "round_robin"
+}

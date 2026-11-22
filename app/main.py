@@ -1,4 +1,4 @@
-import os
+import os, socket 
 from contextlib import contextmanager
 from functools import wraps
 
@@ -14,6 +14,21 @@ from werkzeug.security import check_password_hash, generate_password_hash
 app = Flask(__name__)
 app.secret_key = os.environ["SECRET_KEY"]
 
+INSTANCE_NAME = os.environ.get("INSTANCE_NAME", socket.gethostname())
+APP_ENV = os.environ.get("APP_ENV", "dev")
+
+@app.context_processor
+def inject_instance():
+    # Hace disponibles estas variables en TODAS las plantillas
+    return {"instance_name": INSTANCE_NAME, "app_env": APP_ENV}
+
+@app.after_request
+def add_instance_header(response):
+    # Cabecera HTTP útil para comprobar el reparto con curl
+    response.headers["X-Served-By"] = INSTANCE_NAME
+    return response
+
+    
 DB_CONFIG = {
     "host": os.environ.get("DB_HOST", "db"),
     "dbname": os.environ["POSTGRES_DB"],

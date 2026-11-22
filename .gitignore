@@ -4,6 +4,7 @@
 *.tfstate.*
 *.tfplan
 crash.log
+generated/
 
 # Secretos
 secrets.auto.tfvars

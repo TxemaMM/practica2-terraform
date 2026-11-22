@@ -6,6 +6,9 @@
   <title>Ranking de videojuegos</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+<footer class="instance-info">
+  Servido por <strong>{{ instance_name }}</strong> · entorno {{ app_env }}
+</footer>
 <body>
   <header class="topbar">
     <a class="brand" href="{{ url_for('index') }}">🎮 Game Ranking</a>

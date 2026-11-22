@@ -8,6 +8,17 @@ variable "build_context" {
   type        = string
 }
 
+variable "replicas" {
+  description = "Número de instancias de la web"
+  type        = number
+  default     = 1
+}
+
+variable "environment" {
+  description = "Nombre del entorno (dev/prod), se muestra en la UI"
+  type        = string
+}
+
 variable "network_name" {
   type = string
 }
@@ -64,3 +75,4 @@ variable "gunicorn_threads" {
   type    = number
   default = 4
 }
+
