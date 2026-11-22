@@ -5,7 +5,7 @@
 *.tfplan
 crash.log
 
-# Secretos: van en el zip, nunca en git
+# Secretos
 secrets.auto.tfvars
 
 # Python / editor
