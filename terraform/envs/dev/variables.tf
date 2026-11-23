@@ -60,3 +60,16 @@ variable "minio_reader_password" {
   type      = string
   sensitive = true
 }
+
+variable "grafana_port" {
+  type = number
+}
+
+variable "grafana_admin_user" {
+  type = string
+}
+
+variable "grafana_admin_password" {
+  type      = string
+  sensitive = true
+}

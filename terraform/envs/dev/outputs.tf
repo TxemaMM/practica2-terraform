@@ -9,3 +9,7 @@ output "db_container" {
 output "url" {
   value = "http://localhost:${var.lb_port}"
 }
+
+output "grafana_url" {
+  value = module.monitoring.grafana_url
+}

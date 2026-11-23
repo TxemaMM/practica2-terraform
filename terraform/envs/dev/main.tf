@@ -78,5 +78,16 @@ module "web" {
 
   depends_on = [module.database, module.storage]
   # Dev no tiene caché: la app arranca con CACHE_ENABLED=false
-  
+
+}
+
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  prefix                 = local.prefix
+  environment            = var.environment
+  config_dir             = "${path.root}/generated/monitoring"
+  grafana_port           = var.grafana_port
+  grafana_admin_user     = var.grafana_admin_user
+  grafana_admin_password = var.grafana_admin_password
 }

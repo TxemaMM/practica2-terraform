@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: ${environment}
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: cadvisor
+    static_configs:
+      - targets: ["${cadvisor_host}:8080"]
+    metric_relabel_configs:
+      # cAdvisor ve TODOS los contenedores del equipo (dev y prod).
+      # Nos quedamos solo con los de este entorno.
+      - source_labels: [name]
+        regex: "${prefix}-.*"
+        action: keep
