@@ -101,4 +101,9 @@ module "monitoring" {
   grafana_port           = var.grafana_port
   grafana_admin_user     = var.grafana_admin_user
   grafana_admin_password = var.grafana_admin_password
+
+  alerting_enabled      = true
+  expected_web_replicas = var.web_replicas
+  telegram_bot_token    = var.telegram_bot_token
+  telegram_chat_id      = var.telegram_chat_id
 }

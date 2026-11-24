@@ -78,6 +78,16 @@ resource "docker_container" "grafana" {
     read_only      = true
   }
 
+  # Alertas: solo si están activadas (se monta la carpeta entera)
+  dynamic "volumes" {
+    for_each = var.alerting_enabled ? [1] : []
+    content {
+      host_path      = abspath("${var.config_dir}/alerting")
+      container_path = "/etc/grafana/provisioning/alerting"
+      read_only      = true
+    }
+  }
+
   networks_advanced {
     name = docker_network.monitoring.name
   }
@@ -92,11 +102,20 @@ resource "docker_container" "grafana" {
   wait         = true
   wait_timeout = 120
 
+  depends_on = [
+    local_file.alert_rules,
+    local_sensitive_file.alert_contact_points,
+    local_file.alert_policies,
+  ]
+
   lifecycle {
     replace_triggered_by = [
       local_file.grafana_datasources,
       local_file.grafana_dashboards_provider,
       local_file.grafana_dashboard_containers,
+      local_file.alert_rules,
+      local_sensitive_file.alert_contact_points,
+      local_file.alert_policies,
     ]
   }
 }

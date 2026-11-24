@@ -62,3 +62,26 @@ variable "alloy_image" {
   type    = string
   default = "grafana/alloy:v1.22.0"
 }
+
+variable "alerting_enabled" {
+  description = "Activa las reglas de alerta y el aviso por Telegram"
+  type        = bool
+  default     = false
+}
+
+variable "expected_web_replicas" {
+  description = "Réplicas web que deberían estar activas (umbral de la alerta)"
+  type        = number
+  default     = 0
+}
+
+variable "telegram_bot_token" {
+  type      = string
+  default   = ""
+  sensitive = true
+}
+
+variable "telegram_chat_id" {
+  type    = string
+  default = ""
+}
