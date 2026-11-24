@@ -46,3 +46,19 @@ variable "grafana_image" {
   type    = string
   default = "grafana/grafana:13.3.1"
 }
+
+variable "log_retention" {
+  description = "Cuánto tiempo guarda Loki los logs"
+  type        = string
+  default     = "72h"
+}
+
+variable "loki_image" {
+  type    = string
+  default = "grafana/loki:3.6.22"
+}
+
+variable "alloy_image" {
+  type    = string
+  default = "grafana/alloy:v1.22.0"
+}

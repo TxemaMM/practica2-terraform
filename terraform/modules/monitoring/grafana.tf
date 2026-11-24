@@ -5,6 +5,7 @@ resource "local_file" "grafana_datasources" {
 
   content = templatefile("${path.module}/templates/grafana-datasources.yml.tftpl", {
     prometheus_host = docker_container.prometheus.name
+    loki_host       = docker_container.loki.name
   })
 }
 

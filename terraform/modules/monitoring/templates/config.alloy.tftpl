@@ -1,0 +1,35 @@
+// 1. Descubre los contenedores de ESTE entorno a través del socket de Docker
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+
+  filter {
+    name   = "name"
+    values = ["${prefix}-"]
+  }
+}
+
+// 2. Etiqueta "container" con el nombre limpio (Docker lo da con una "/" delante)
+loki.relabel "containers" {
+  forward_to = []
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+}
+
+// 3. Lee los logs de esos contenedores y los reenvía a Loki
+loki.source.docker "containers" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.docker.containers.targets
+  relabel_rules = loki.relabel.containers.rules
+  labels        = { "environment" = "${environment}" }
+  forward_to    = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://${loki_host}:3100/loki/api/v1/push"
+  }
+}
