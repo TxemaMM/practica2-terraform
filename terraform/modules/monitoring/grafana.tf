@@ -9,6 +9,25 @@ resource "local_file" "grafana_datasources" {
   })
 }
 
+resource "local_file" "grafana_dashboards_provider" {
+  filename             = "${var.config_dir}/grafana-dashboards.yml"
+  file_permission      = "0644"
+  directory_permission = "0755"
+
+  content = templatefile("${path.module}/templates/grafana-dashboards.yml.tftpl", {})
+}
+
+resource "local_file" "grafana_dashboard_containers" {
+  filename             = "${var.config_dir}/dashboards/containers.json"
+  file_permission      = "0644"
+  directory_permission = "0755"
+
+  content = templatefile("${path.module}/templates/dashboard-containers.json.tftpl", {
+    prefix      = var.prefix
+    environment = var.environment
+  })
+}
+
 resource "docker_image" "grafana" {
   name         = var.grafana_image
   keep_locally = true
@@ -48,6 +67,17 @@ resource "docker_container" "grafana" {
     container_path = "/var/lib/grafana"
   }
 
+  volumes {
+    host_path      = abspath(local_file.grafana_dashboards_provider.filename)
+    container_path = "/etc/grafana/provisioning/dashboards/dashboards.yml"
+    read_only      = true
+  }
+  volumes {
+    host_path      = abspath(local_file.grafana_dashboard_containers.filename)
+    container_path = "/etc/grafana/dashboards/containers.json"
+    read_only      = true
+  }
+
   networks_advanced {
     name = docker_network.monitoring.name
   }
@@ -63,6 +93,10 @@ resource "docker_container" "grafana" {
   wait_timeout = 120
 
   lifecycle {
-    replace_triggered_by = [local_file.grafana_datasources]
+    replace_triggered_by = [
+      local_file.grafana_datasources,
+      local_file.grafana_dashboards_provider,
+      local_file.grafana_dashboard_containers,
+    ]
   }
 }
