@@ -2,8 +2,9 @@
 resource "local_file" "nginx_conf" {
   filename = "${var.config_dir}/nginx.conf"
   content = templatefile("${path.module}/templates/nginx.conf.tftpl", {
-    backends  = var.backends
-    algorithm = var.algorithm
+    backends      = var.backends
+    algorithm     = var.algorithm
+    max_upload_mb = var.max_upload_mb
 
   })
 }

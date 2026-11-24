@@ -50,6 +50,11 @@ resource "docker_container" "grafana" {
     "GF_ANALYTICS_CHECK_FOR_UPDATES=false",
   ]
 
+  labels {
+    label = "alerting.config_hash"
+    value = local.alerting_hash
+  }
+
   # Solo accesible desde este equipo, no desde la red
   ports {
     internal = 3000
@@ -113,9 +118,6 @@ resource "docker_container" "grafana" {
       local_file.grafana_datasources,
       local_file.grafana_dashboards_provider,
       local_file.grafana_dashboard_containers,
-      local_file.alert_rules,
-      local_sensitive_file.alert_contact_points,
-      local_file.alert_policies,
     ]
   }
 }

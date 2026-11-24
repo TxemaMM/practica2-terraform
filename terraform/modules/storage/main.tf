@@ -58,6 +58,8 @@ resource "docker_container" "init" {
     "READER_PASSWORD=${var.reader_password}",
     # Si cambian las imágenes, este valor cambia y el init se vuelve a ejecutar
     "IMAGES_HASH=${sha1(join("", [for f in sort(fileset(var.images_dir, "*")) : filesha1("${var.images_dir}/${f}")]))}",
+    # Si cambia el propio script, el init se vuelve a ejecutar
+    "INIT_SCRIPT_HASH=${filesha1("${path.module}/scripts/init.sh")}",
   ]
 
   networks_advanced {

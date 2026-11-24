@@ -1,6 +1,3 @@
-#!/bin/sh
-set -eu
-
 echo "Esperando a MinIO..."
 until mc ready local >/dev/null 2>&1; do sleep 1; done
 
@@ -8,14 +5,14 @@ until mc ready local >/dev/null 2>&1; do sleep 1; done
 mc mb --ignore-existing "local/${BUCKET}"
 mc anonymous set none "local/${BUCKET}"
 
-# 2. Política de solo lectura limitada a este bucket
-cat > /tmp/readonly-policy.json <<EOF
+# 2. Política de la aplicación: leer, subir y listar. NO borrar.
+cat > /tmp/app-policy.json <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": ["s3:GetObject"],
+      "Action": ["s3:GetObject", "s3:PutObject"],
       "Resource": ["arn:aws:s3:::${BUCKET}/*"]
     },
     {
@@ -26,13 +23,17 @@ cat > /tmp/readonly-policy.json <<EOF
   ]
 }
 EOF
-mc admin policy create local "${BUCKET}-readonly" /tmp/readonly-policy.json
+mc admin policy create local "${BUCKET}-app" /tmp/app-policy.json
 
-# 3. Usuario de solo lectura con esa política
+# 3. Usuario de la aplicación con la política nueva
 mc admin user add local "${READER_USER}" "${READER_PASSWORD}"
-mc admin policy attach local "${BUCKET}-readonly" --user "${READER_USER}" || echo "(la política ya estaba asignada)"
+mc admin policy attach local "${BUCKET}-app" --user "${READER_USER}" || echo "(la política ya estaba asignada)"
 
-# 4. Subir las imágenes
+# 4. Retirar la política antigua de solo lectura (si venimos de una versión anterior)
+mc admin policy detach local "${BUCKET}-readonly" --user "${READER_USER}" 2>/dev/null || true
+mc admin policy remove local "${BUCKET}-readonly" 2>/dev/null || true
+
+# 5. Subir las imágenes iniciales
 mc mirror --overwrite /images "local/${BUCKET}"
 
 echo "MinIO inicializado"

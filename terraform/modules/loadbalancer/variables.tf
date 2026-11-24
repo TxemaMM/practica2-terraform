@@ -42,3 +42,9 @@ variable "config_dir" {
   description = "Carpeta donde se genera nginx.conf"
   type        = string
 }
+
+variable "max_upload_mb" {
+  description = "Tamaño máximo de subida en MB (nginx rechaza con 413 lo que lo supere)"
+  type        = number
+  default     = 5
+}

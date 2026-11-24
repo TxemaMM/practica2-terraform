@@ -28,8 +28,15 @@
 {% if session.get('user_id') %}
 <section class="card">
   <h2>➕ Añadir videojuego</h2>
-  <form class="add" method="post" action="{{ url_for('add_game') }}">
+  <form class="add" method="post" action="{{ url_for('add_game') }}"
+        enctype="multipart/form-data">
     <input type="text" name="name" maxlength="60" placeholder="Nombre del videojuego" required>
+
+    <label class="file-picker">
+      <span class="file-title">Imagen (opcional, JPG o PNG, máx. 5 MB)</span>
+      <input type="file" name="image" accept="image/jpeg,image/png">
+    </label>
+
     <button type="submit" class="btn">Añadir</button>
   </form>
 </section>

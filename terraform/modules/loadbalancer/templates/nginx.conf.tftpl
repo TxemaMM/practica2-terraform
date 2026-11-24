@@ -11,6 +11,9 @@ upstream web_backend {
 server {
     listen 80;
 
+    # Tamaño máximo del cuerpo de una petición (subida de imágenes)
+    client_max_body_size ${max_upload_mb}m;
+    
     # Endpoint propio del balanceador, para su healthcheck
     location = /lb-health {
         access_log off;

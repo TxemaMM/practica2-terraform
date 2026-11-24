@@ -1,5 +1,7 @@
 import socket
 
+import io
+
 import os
 from contextlib import contextmanager
 from functools import wraps
@@ -19,6 +21,15 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 app.secret_key = os.environ["SECRET_KEY"]
+
+MAX_UPLOAD_MB = 5
+app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_MB * 1024 * 1024
+
+
+@app.errorhandler(413)
+def upload_too_large(e):
+    flash(f"La imagen supera el máximo de {MAX_UPLOAD_MB} MB.")
+    return redirect(url_for("index"))
 
 INSTANCE_NAME = os.environ.get("INSTANCE_NAME", socket.gethostname())
 APP_ENV = os.environ.get("APP_ENV", "dev")
@@ -62,17 +73,55 @@ def fetch_image(object_name):
         response.close()
         response.release_conn()
 
+# Tipos permitidos: extensión -> (firma de los primeros bytes, tipo MIME)
+IMAGE_TYPES = {
+    "jpg": (b"\xff\xd8\xff", "image/jpeg"),
+    "png": (b"\x89PNG\r\n\x1a\n", "image/png"),
+}
+
+
+def detect_image_type(data):
+    """Mira los primeros bytes del fichero, no el nombre que manda el navegador."""
+    for ext, (magic, mime) in IMAGE_TYPES.items():
+        if data.startswith(magic):
+            return ext, mime
+    return None, None
+
+
+def store_image(game_id, data, ext, mime):
+    """Sube la imagen a MinIO. Devuelve True/False y nunca lanza excepción."""
+    if minio_client is None:
+        return False
+    try:
+        minio_client.put_object(
+            MINIO_BUCKET,
+            f"game-{game_id}.{ext}",      # el nombre lo decidimos nosotros
+            io.BytesIO(data),
+            length=len(data),
+            content_type=mime,
+        )
+        return True
+    except Exception as e:
+        app.logger.error("No se pudo subir la imagen del juego %s: %s", game_id, e)
+        return False
 
 @app.route("/images/<int:game_id>")
 def game_image(game_id):
     if minio_client is None:
         abort(404)
 
-    data = None
-    # Primero la imagen del juego; si no existe, la imagen por defecto
-    for name in (f"game-{game_id}.jpg", "default.jpg"):
+    # Orden de búsqueda: imagen JPG del juego, PNG del juego, imagen por defecto
+    candidates = (
+        (f"game-{game_id}.jpg", "image/jpeg"),
+        (f"game-{game_id}.png", "image/png"),
+        ("default.jpg", "image/jpeg"),
+    )
+
+    data = mimetype = None
+    for name, mime in candidates:
         try:
             data = fetch_image(name)
+            mimetype = mime
             break
         except S3Error as e:
             if e.code == "NoSuchKey":
@@ -86,8 +135,9 @@ def game_image(game_id):
     if data is None:
         abort(404)
 
-    response = Response(data, mimetype="image/jpeg")
-    response.headers["Cache-Control"] = "public, max-age=3600"
+    response = Response(data, mimetype=mimetype)
+    # Caché corta: una imagen recién subida debe verse pronto
+    response.headers["Cache-Control"] = "public, max-age=60"
     return response
 
     
@@ -297,19 +347,41 @@ def add_game():
     if not 1 <= len(name) <= 60:
         flash("El nombre debe tener entre 1 y 60 caracteres.")
         return redirect(url_for("index"))
+
+    # Imagen opcional: se valida ANTES de tocar la base de datos
+    image = request.files.get("image")
+    image_data = ext = mime = None
+    if image and image.filename:
+        image_data = image.read()
+        ext, mime = detect_image_type(image_data)
+        if ext is None:
+            flash("La imagen debe ser un JPG o PNG válido.")
+            return redirect(url_for("index"))
+
     try:
         with db() as cur:
+            # RETURNING id nos da el id del juego recién creado (nada si ya existía)
             cur.execute(
-                "INSERT INTO games (name) VALUES (%s) ON CONFLICT (name) DO NOTHING",
+                "INSERT INTO games (name) VALUES (%s) "
+                "ON CONFLICT (name) DO NOTHING RETURNING id",
                 (name,),
             )
-            added = cur.rowcount == 1
+            row = cur.fetchone()
     except psycopg2.Error:
         flash("La base de datos no está disponible.")
         return redirect(url_for("index"))
-    if added:
-        invalidate_cache()
-    flash("Videojuego añadido." if added else "Ese videojuego ya estaba en la lista.")
+
+    if row is None:
+        flash("Ese videojuego ya estaba en la lista.")
+        return redirect(url_for("index"))
+
+    invalidate_cache()
+    if image_data is None:
+        flash("Videojuego añadido.")
+    elif store_image(row[0], image_data, ext, mime):
+        flash("Videojuego añadido con su imagen.")
+    else:
+        flash("Videojuego añadido, pero no se pudo guardar la imagen.")
     return redirect(url_for("index"))
 
 

@@ -139,3 +139,18 @@ ul.games form { margin: 0; }
   margin-right: 0.75rem;
   vertical-align: middle;
 }
+
+.file-picker input[type="file"]::file-selector-button {
+  font: inherit;
+  padding: 0.4rem 0.9rem;
+  margin-right: 0.6rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.file-picker input[type="file"]::file-selector-button:hover {
+  filter: brightness(1.15);   /* mismo efecto al pasar el ratón que .btn */
+}

@@ -35,3 +35,13 @@ resource "local_file" "alert_policies" {
 
   content = templatefile("${path.module}/templates/alert-policies.yml.tftpl", {})
 }
+
+locals {
+  # Hash de todo lo que define las alertas. Si cambia, Grafana se recrea.
+  # Con alerting_enabled = false las listas están vacías y el valor no cambia.
+  alerting_hash = sha1(join("", concat(
+    local_file.alert_rules[*].content_sha1,
+    local_file.alert_policies[*].content_sha1,
+    [nonsensitive(sha1("${var.telegram_bot_token}${var.telegram_chat_id}"))],
+  )))
+}
