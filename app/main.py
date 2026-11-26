@@ -37,7 +37,8 @@ APP_ENV = os.environ.get("APP_ENV", "dev")
 @app.context_processor
 def inject_instance():
     # Hace disponibles estas variables en TODAS las plantillas
-    return {"instance_name": INSTANCE_NAME, "app_env": APP_ENV}
+    return {"instance_name": INSTANCE_NAME, "app_env": APP_ENV,
+            "cache_enabled": CACHE_ENABLED}
 
 @app.after_request
 def add_instance_header(response):

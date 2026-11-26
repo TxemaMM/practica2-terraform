@@ -81,7 +81,7 @@ groups:
               datasource:
                 type: prometheus
                 uid: prometheus
-              expr: 'sum by (name) (rate(container_cpu_usage_seconds_total{name=~"${prefix}-.*"}[1m])) * 100'
+              expr: 'sum by (name) (rate(container_cpu_usage_seconds_total{name=~"${prefix}-.*"}[2m])) * 100'
               instant: true
               intervalMs: 1000
               maxDataPoints: 43200

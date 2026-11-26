@@ -6,6 +6,10 @@ output "db_container" {
   value = module.database.host
 }
 
+output "lb_container" {
+  value = module.loadbalancer.name
+}
+
 output "url" {
   value = "http://localhost:${var.lb_port}"
 }

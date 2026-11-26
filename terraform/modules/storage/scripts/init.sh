@@ -29,11 +29,7 @@ mc admin policy create local "${BUCKET}-app" /tmp/app-policy.json
 mc admin user add local "${READER_USER}" "${READER_PASSWORD}"
 mc admin policy attach local "${BUCKET}-app" --user "${READER_USER}" || echo "(la política ya estaba asignada)"
 
-# 4. Retirar la política antigua de solo lectura (si venimos de una versión anterior)
-mc admin policy detach local "${BUCKET}-readonly" --user "${READER_USER}" 2>/dev/null || true
-mc admin policy remove local "${BUCKET}-readonly" 2>/dev/null || true
-
-# 5. Subir las imágenes iniciales
+# 4. Subir las imágenes iniciales
 mc mirror --overwrite /images "local/${BUCKET}"
 
 echo "MinIO inicializado"

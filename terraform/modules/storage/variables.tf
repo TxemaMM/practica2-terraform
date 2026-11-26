@@ -27,7 +27,7 @@ variable "root_password" {
 }
 
 variable "reader_user" {
-  description = "Usuario de solo lectura que usará la web"
+  description = "Usuario que usará la web sin poder borrar estáticos"
   type        = string
 }
 

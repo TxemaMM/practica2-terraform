@@ -20,27 +20,27 @@ resource "docker_container" "cadvisor" {
   }
 
   # Carpetas del host en solo lectura: de aquí lee cAdvisor las estadísticas
-  volumes {
+  volumes { #informacion sobre los sistemas de ficheros
     host_path      = "/"
     container_path = "/rootfs"
     read_only      = true
   }
-  volumes {
+  volumes { #socket de docker para saber como se llama cada contenedor
     host_path      = "/var/run"
     container_path = "/var/run"
     read_only      = true
   }
-  volumes {
+  volumes { #los contadores de CPU y memoria de cada contenedor
     host_path      = "/sys"
     container_path = "/sys"
     read_only      = true
   }
-  volumes {
+  volumes { #cuandot disco ocupa cada uno
     host_path      = "/var/lib/docker"
     container_path = "/var/lib/docker"
     read_only      = true
   }
-  volumes {
+  volumes { #identificar los discos
     host_path      = "/dev/disk"
     container_path = "/dev/disk"
     read_only      = true
